@@ -1,0 +1,100 @@
+* Notes
+<2022-10-22 Sat 20:06>: These are the commands I used to set this lab up:
+#+begin_src bash
+npm install --prefix client
+bundle install
+#+end_src
+
+The related 'Spice' model had the following specs for its required columns:
+- title (string)
+- image (string)
+- description (string)
+- notes (string)
+- rating (float)
+
+'float' Notes
+- One of the previous labs required a 'float' but the somewhat dumb tests only looked for a 'string' value, so I will assume 'string' is fine for float for the context of the tests required for this lab, and will choose to use 'string' for the 'rating' column value.
+- EDIT: <2022-10-22 Sat 20:25>: I looked into the 'solution' branch and they DID use 'float'... go figure, so I guess that works for this lab I guess, so I updated the 'rating' column within the 'rails g model command accordingly
+
+I then generated a related model with the following 'rails g model' command:
+#+begin_src bash
+rails g model Spice title image description notes rating:float --no-test-framework
+#+end_src
+
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-mini-project-crud $ rails g model Spice title image description notes rating:float --no-test-framework
+      invoke  active_record
+      create    db/migrate/20221023012459_create_spices.rb
+      create    app/models/spice.rb
+#+end_src
+
+I then ran the 'rails db:migrate db:seed' command.
+
+I then noted the following requirements for the API routes:
+- GET /spices: return an array of all spices
+- POST /spices: create a new spice
+- PATCH /spices/:id: update an existing spice
+- DELETE /spices/:id: delete an existing spice
+
+AKA:
+- GET --> aka use Rails' index() and show() methods
+- POST --> aka use Rails' create() method
+- PATCH --> aka use Rails' update() method
+- Delete --> aka use Rails' destroy() method
+
+I then created a related controller via the 'rails g controller' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-mini-project-crud $ rails g controller spices_controller --no-test-framework
+      create  app/controllers/spices_controller.rb
+#+end_src
+
+I then revised the 'app/controllers/spices_controller.rb' controller file with the following contents to mimic the previous 'plants' based lab since it had very similar methods to handle the various desired RESTful API routes:
+#+begin_src ruby
+class SpicesController < ApplicationController
+    # GET /spices
+    def index
+        spices = Spice.all()
+        render json: spices
+    end
+
+    # GET /spices/:id
+    def show
+        spice = Spice.find_by(id: params[:id])
+        render json: spice
+    end
+
+    # POST /spices
+    def create
+        spice = Spice.create(spice_params)
+        render json: spice, status: :created
+    end
+
+    # PATCH /spices/:id
+    def update
+        spice = Spice.find_by(id: params[:id])
+        spice.update(spice_params)
+        render json: spice
+    end
+
+    # DELETE /spices/:id
+    def destroy
+        spice = Spice.find_by(id: params[:id])
+        spice.destroy()
+        head :no_content
+    end
+
+    private
+
+    def spice_params
+        params.permit(:title, :image, :description, :notes, :rating)
+    end
+end
+#+end_src
+
+I then revised the 'config/routes.rb' routes file with the following contents:
+#+begin_src ruby
+Rails.application.routes.draw do
+  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+  resources :spices, only: [:index, :create, :update, :destroy]
+end
+#+end_src
